@@ -16,6 +16,48 @@
 ## 实时开发
 代码变动时，不需要重新构建和启动容器，即可查看变动后的效果。请参考[微信云托管实时开发指南](https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/guide/debug/dev.html)
 
+## Docker 运行
+
+### 构建镜像
+
+```bash
+docker build -t quantalent-wxcloud .
+```
+
+### 运行容器
+
+#### 基本用法（端口映射）
+
+```bash
+# 将主机 8080 端口映射到容器 80 端口（默认配置）
+docker run -d -p 8080:80 --name my-app quantalent-wxcloud
+
+# 指定主机 IP，仅允许本地访问
+docker run -d -p 127.0.0.1:8080:80 --name my-app quantalent-wxcloud
+```
+
+#### 自定义容器内监听地址和端口
+
+如果需要改变容器内应用监听的地址和端口，可以覆盖启动命令：
+
+```bash
+# 容器内监听 0.0.0.0:3000，主机映射到 8080
+docker run -d -p 8080:3000 --name my-app quantalent-wxcloud python3 run.py 0.0.0.0 3000
+
+# 容器内监听 127.0.0.1:5000，主机映射到 5000
+docker run -d -p 5000:5000 --name my-app quantalent-wxcloud python3 run.py 127.0.0.1 5000
+```
+
+#### 常用参数
+
+- `-p <主机端口>:<容器端口>` - 端口映射
+- `-p <主机IP>:<主机端口>:<容器端口>` - 指定主机 IP 的端口映射
+- `-d` - 后台运行
+- `--name <容器名>` - 指定容器名称
+- `--rm` - 容器停止后自动删除
+
+**说明**：容器默认监听 `0.0.0.0:80`（见 Dockerfile），通常只需使用 `-p` 进行端口映射即可。
+
 ## Dockerfile最佳实践
 请参考[如何提高项目构建效率](https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/scene/build/speed.html)
 
@@ -42,9 +84,9 @@
 
 ## 服务 API 文档
 
-### `GET /api/count`
+### `GET /api/companies`
 
-获取当前计数
+获取公司列表
 
 #### 请求参数
 
@@ -52,62 +94,254 @@
 
 #### 响应结果
 
-- `code`：错误码
-- `data`：当前计数值
+- `code`：状态码 (200 表示成功)
+- `message`：提示信息
+- `data`：公司列表数组
+
+**data 对象结构**:
+- `id`：公司 ID
+- `name`：公司名称
+- `image`：公司 Logo 图片 URL
+- `question_count`：该公司关联的题目数量
 
 ##### 响应结果示例
 
 ```json
 {
-  "code": 0,
-  "data": 42
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "id": 1,
+      "name": "Jane Street",
+      "image": "https://example.com/janestreet.png",
+      "question_count": 100
+    }
+  ]
 }
 ```
 
 #### 调用示例
 
+```bash
+curl https://<云托管服务域名>/api/companies
 ```
-curl https://<云托管服务域名>/api/count
-```
 
+---
 
+### `GET /api/questions`
 
-### `POST /api/count`
-
-更新计数，自增或者清零
+获取题目列表，支持按公司、难度、标签筛选
 
 #### 请求参数
 
-- `action`：`string` 类型，枚举值
-  - 等于 `"inc"` 时，表示计数加一
-  - 等于 `"clear"` 时，表示计数重置（清零）
+| 参数名     | 类型   | 必填 | 说明                                                    |
+| :--------- | :----- | :--- | :------------------------------------------------------ |
+| company_id | Number | 是   | 公司 ID                                                 |
+| difficulty | String | 否   | 难度筛选 (Easy, Medium, Hard)，不传则为全部             |
+| tag        | String | 否   | 标签筛选，多个标签用逗号分隔                            |
+| page       | Number | 否   | 页码，默认为 1                                          |
+| page_size  | Number | 否   | 每页数量，默认为 10                                     |
+
+#### 响应结果
+
+- `code`：状态码 (200 表示成功)
+- `message`：提示信息
+- `data`：响应数据对象
+
+**data 对象结构**:
+- `list`：题目列表数组
+- `total`：总题目数
+- `page`：当前页码
+- `page_size`：每页数量
+
+**list 元素结构**:
+- `id`：题目 ID
+- `title`：题目标题
+- `difficulty`：难度 (Easy, Medium, Hard)
+- `tags`：标签列表
+
+##### 响应结果示例
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "total": 50,
+    "page": 1,
+    "page_size": 10,
+    "list": [
+      {
+        "id": 101,
+        "title": "Expected Number of Tosses",
+        "difficulty": "Medium",
+        "tags": ["Probability", "Expected Value"]
+      }
+    ]
+  }
+}
+```
+
+#### 调用示例
+
+```bash
+curl "https://<云托管服务域名>/api/questions?company_id=1&difficulty=Medium&page=1&page_size=10"
+```
+
+---
+
+### `GET /api/question_detail`
+
+获取题目详情
+
+#### 请求参数
+
+| 参数名     | 类型   | 必填 | 说明   |
+| :--------- | :----- | :--- | :----- |
+| question_id | Number | 是   | 题目 ID |
+
+#### 响应结果
+
+- `code`：状态码 (200 表示成功)
+- `message`：提示信息
+- `data`：题目详情对象
+
+**data 对象结构**:
+- `id`：题目 ID
+- `company_name`：公司名称
+- `title`：题目标题
+- `level`：难度级别
+- `tags`：标签列表
+- `firms`：关联公司列表
+- `content`：题目内容
+- `solution`：解题思路
+- `answer`：答案
+- `hint`：提示
+
+##### 响应结果示例
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "id": 101,
+    "company_name": "Jane Street",
+    "title": "Expected Number of Tosses",
+    "level": "Medium",
+    "tags": ["Probability", "Expected Value"],
+    "firms": ["Jane Street", "Citadel"],
+    "content": "题目内容...",
+    "solution": "解题思路...",
+    "answer": "答案...",
+    "hint": "提示信息..."
+  }
+}
+```
+
+#### 调用示例
+
+```bash
+curl "https://<云托管服务域名>/api/question_detail?question_id=101"
+```
+
+---
+
+### `POST /api/add_questions`
+
+添加面试题
+
+#### 请求参数
+
+| 参数名       | 类型   | 必填 | 说明           |
+| :----------- | :----- | :--- | :------------- |
+| company_name | String | 是   | 公司名称       |
+| title        | String | 是   | 题目标题       |
+| content      | String | 是   | 题目内容       |
+| solution     | String | 是   | 解题思路       |
+| answer       | String | 是   | 答案           |
+| level        | String | 是   | 难度级别       |
+| hint         | String | 是   | 提示           |
+| tags         | String | 是   | 标签           |
+| firms        | String | 是   | 关联公司列表   |
 
 ##### 请求参数示例
 
-```
+```json
 {
-  "action": "inc"
+  "company_name": "Jane Street",
+  "title": "Expected Number of Tosses",
+  "content": "题目内容...",
+  "solution": "解题思路...",
+  "answer": "答案...",
+  "level": "Medium",
+  "hint": "提示信息...",
+  "tags": "Probability,Expected Value",
+  "firms": "Jane Street,Citadel"
 }
 ```
 
 #### 响应结果
 
-- `code`：错误码
-- `data`：当前计数值
+- `code`：状态码 (200 表示成功)
+- `data`：新创建的题目 ID
 
 ##### 响应结果示例
 
 ```json
 {
-  "code": 0,
-  "data": 42
+  "code": 200,
+  "data": 101
 }
 ```
 
 #### 调用示例
 
+```bash
+curl -X POST -H 'content-type: application/json' \
+  -d '{
+    "company_name": "Jane Street",
+    "title": "Expected Number of Tosses",
+    "content": "题目内容...",
+    "solution": "解题思路...",
+    "answer": "答案...",
+    "level": "Medium",
+    "hint": "提示信息...",
+    "tags": "Probability,Expected Value",
+    "firms": "Jane Street,Citadel"
+  }' \
+  https://<云托管服务域名>/api/add_questions
 ```
-curl -X POST -H 'content-type: application/json' -d '{"action": "inc"}' https://<云托管服务域名>/api/count
+
+---
+
+### `GET /health`
+
+健康检查端点
+
+#### 请求参数
+
+无
+
+#### 响应结果
+
+- `status`：服务状态
+- `message`：提示信息
+
+##### 响应结果示例
+
+```json
+{
+  "status": "ok",
+  "message": "service is running"
+}
+```
+
+#### 调用示例
+
+```bash
+curl https://<云托管服务域名>/health
 ```
 
 ## 使用注意

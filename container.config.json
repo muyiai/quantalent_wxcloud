@@ -23,10 +23,10 @@
 	"envParams": {},         
 	"customLogs": "stdout",              
 	"initialDelaySeconds": 2,                  
-	"dataBaseName":"flask_demo",
+	"dataBaseName":"quantalent",
 	"executeSQLs":[
-		"CREATE DATABASE IF NOT EXISTS flask_demo;",
-		"USE flask_demo;",
-		"CREATE TABLE IF NOT EXISTS `Counters` (`id` int(11) NOT NULL AUTO_INCREMENT, `count` int(11) NOT NULL DEFAULT 1, `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`)) ENGINE = InnoDB DEFAULT CHARSET = utf8;"
+		"CREATE DATABASE IF NOT EXISTS quantalent;",
+		"USE quantalent;",
+		"CREATE TABLE IF NOT EXISTS `Questions` (`id` int NOT NULL AUTO_INCREMENT, `company_name` linestring NOT NULL, `title` linestring NOT NULL, `content` text NOT NULL, `solution` text NOT NULL, `answer` text NOT NULL, `level` tinyint NOT NULL, `hint` text NOT NULL, `tags` linestring NOT NULL, `firms` linestring NOT NULL, `createdAt` datetime NOT NULL, `updatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (`id`), unique `c_n` USING btree (`company_name`, `name`)) ENGINE = innodb CHARSET = utf8;"
 	]    
 }

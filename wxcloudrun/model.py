@@ -3,13 +3,27 @@ from datetime import datetime
 from wxcloudrun import db
 
 
-# 计数表
-class Counters(db.Model):
-    # 设置结构体表格名称
-    __tablename__ = 'Counters'
+# 面试题库
+class Questions(db.Model):
+    __tablename__ = 'Questions'
 
-    # 设定结构体对应表格的字段
     id = db.Column(db.Integer, primary_key=True)
-    count = db.Column(db.Integer, default=1)
+    company_name = db.Column(db.String(255), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    solution = db.Column(db.Text, nullable=False)
+    answer = db.Column(db.Text, nullable=False)
+    level = db.Column(db.Integer, nullable=False)
+    hint = db.Column(db.Text, nullable=False)
+    tags = db.Column(db.String(255), nullable=False)
+    firms = db.Column(db.String(255), nullable=False)
     created_at = db.Column('createdAt', db.TIMESTAMP, nullable=False, default=datetime.now())
     updated_at = db.Column('updatedAt', db.TIMESTAMP, nullable=False, default=datetime.now())
+
+
+class Companies(db.Model):
+    __tablename__ = 'Companies'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    image_url = db.Column(db.String(255), nullable=False)
