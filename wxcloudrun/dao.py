@@ -1,4 +1,5 @@
 import logging
+import urllib.parse
 
 from sqlalchemy.exc import OperationalError
 
@@ -146,12 +147,13 @@ def get_questionsbylevel(company_name, level=None, tags=None):
     """
     try:
         if level and tags:
-            tags = [t.strip() for t in tags.split(',')]
+            tags = [urllib.parse.unquote(t) for t in tags.split(',')]
+            tag = tags[0]
             levels = [level_map[l.strip()] for l in level.split(',')]
             data = Questions.query.filter(
                 Questions.company_name == company_name, 
                 Questions.level.in_(levels), 
-                Questions.tags.in_(tags)  # 'tags' instead of 'tag'
+                Questions.tags.like(f'%{tag}%')  # 'tags' instead of 'tag'
             ).order_by(Questions.id.desc()).all()
         elif level:
             levels = [level_map[l.strip()] for l in level.split(',')]
@@ -160,10 +162,11 @@ def get_questionsbylevel(company_name, level=None, tags=None):
                 Questions.level.in_(levels)
             ).order_by(Questions.id.desc()).all()
         elif tags:
-            tags = [t.strip() for t in tags.split(',')]
+            tags = [urllib.parse.unquote(t) for t in tags.split(',')]
+            tag = tags[0]
             data = Questions.query.filter(
                 Questions.company_name == company_name, 
-                Questions.tags.in_(tags)  # 'tags' instead of 'tag'
+                Questions.tags.like(f'%{tag}%')
             ).order_by(Questions.id.desc()).all()
         else:
             data = Questions.query.filter(

@@ -57,7 +57,7 @@ def get_questions():
     """
     company_id = request.args.get('company_id')
     level = request.args.get('difficulty', None)
-    tags = request.args.get('tags', None)
+    tags = request.args.get('tag', None)
     page = request.args.get('page', 1)
     page_size = request.args.get('page_size', 10)
     company_name = get_company_by_id(company_id)
