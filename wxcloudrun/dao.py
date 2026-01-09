@@ -8,6 +8,12 @@ from wxcloudrun.model import Questions, Companies
 # 初始化日志
 logger = logging.getLogger('log')
 
+level_map = {
+    "Easy": 1,
+    "Medium": 2,
+    "Hard": 3,
+}
+
 
 def get_company_by_id(company_id):
     """
@@ -130,7 +136,7 @@ def get_questionsbycompany(company_name):
         return None
 
 
-def get_questionsbylevel(company_name, level=None, tag=None):
+def get_questionsbylevel(company_name, level=None, tags=None):
     """
     根据公司名称查询Questions实体
     :param company_name: Companies的名称
@@ -139,20 +145,22 @@ def get_questionsbylevel(company_name, level=None, tag=None):
     :return: Questions实体列表
     """
     try:
-        if level and tag:
-            tags = [t.strip() for t in tag.split(',')]
-            levels = [int(l.strip()) for l in level.split(',')]
+        if level and tags:
+            tags = [t.strip() for t in tags.split(',')]
+            levels = [level_map[l.strip()] for l in level.split(',')]
             data = Questions.query.filter(
                 Questions.company_name == company_name, 
                 Questions.level.in_(levels), 
                 Questions.tags.in_(tags)  # 'tags' instead of 'tag'
             ).order_by(Questions.id.desc()).all()
         elif level:
+            levels = [level_map[l.strip()] for l in level.split(',')]
             data = Questions.query.filter(
                 Questions.company_name == company_name, 
                 Questions.level.in_(levels)
             ).order_by(Questions.id.desc()).all()
-        elif tag:
+        elif tags:
+            tags = [t.strip() for t in tags.split(',')]
             data = Questions.query.filter(
                 Questions.company_name == company_name, 
                 Questions.tags.in_(tags)  # 'tags' instead of 'tag'

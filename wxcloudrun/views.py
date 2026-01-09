@@ -57,13 +57,13 @@ def get_questions():
     """
     company_id = request.args.get('company_id')
     level = request.args.get('difficulty', None)
-    tag = request.args.get('tag', None)
+    tags = request.args.get('tags', None)
     page = request.args.get('page', 1)
     page_size = request.args.get('page_size', 10)
     company_name = get_company_by_id(company_id)
     if company_name is None:
         return make_err_response('Company not found')
-    questions = get_questionsbylevel(company_name, level, tag)
+    questions = get_questionsbylevel(company_name, level, tags)
     return make_succ_questions_response(
         questions, int(page), int(page_size))
 

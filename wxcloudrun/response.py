@@ -69,8 +69,6 @@ def make_succ_questions_response(data, page, page_size):
         return make_err_response('page is out of range')
     if page_size < 1:
         return make_err_response('page_size is out of range')
-    if page_size > len(data):
-        return make_err_response('page_size is out of range')
     if isinstance(data, list):
         for item in data[page_size * (page - 1):page_size * page]:
             tmp = {}
